@@ -1,0 +1,33 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cert-manager
+  namespace: argocd
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - chart: cert-manager
+    repoURL: https://charts.jetstack.io
+    targetRevision: "1.13.3"
+    helm:
+      version: v3
+      releaseName: cert-manager
+      valueFiles:
+      - $values-repo/cluster1/cert-manager/values.yaml
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    targetRevision: main
+    ref: values-repo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: cert-manager
+  syncPolicy:
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP

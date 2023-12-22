@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: opentelemetry-operator
+  namespace: argocd
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - chart: opentelemetry-operator
+    repoURL: https://open-telemetry.github.io/opentelemetry-helm-charts
+    targetRevision: "0.44.2"
+    helm:
+      version: v3
+      releaseName: opentelemetry-operator
+      valueFiles:
+      - $values-repo/cluster1/monitoring/opentelemetry-operator/values.yaml
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    targetRevision: main
+    ref: values-repo
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/opentelemetry-operator/collector
+    targetRevision: main
+    directory:
+      recurse: true
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/opentelemetry-operator/instrumentation
+    targetRevision: main
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP

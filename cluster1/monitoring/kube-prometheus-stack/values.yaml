@@ -3,15 +3,6 @@
 ##
 alertmanager:
   alertmanagerSpec:
-    # nodeSelector: 
-    #   node-role.kubernetes.io/control-plane: ""
-    # tolerations: 
-    # - key: "node-role.kubernetes.io/master"
-    #   operator: "Equal"
-    #   effect: "NoSchedule"
-    # - key: "node-role.kubernetes.io/control-plane"
-    #   operator: "Equal"
-    #   effect: "NoSchedule"
     nodeSelector: 
       dedicated: monitoring
     tolerations:
@@ -33,16 +24,6 @@ grafana:
   persistence:
     enabled: true
     storageClassName: openebs-hostpath
-
-  # nodeSelector:
-  #   node-role.kubernetes.io/control-plane: ""
-  # tolerations: 
-  # - key: "node-role.kubernetes.io/master"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
-  # - key: "node-role.kubernetes.io/control-plane"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
 
   nodeSelector: 
     dedicated: monitoring
@@ -67,22 +48,13 @@ grafana:
     ## IngressClassName for Grafana Ingress.
     ## Should be provided if Ingress is enable.
     ##
-    # ingressClassName: nginx
-
-    ## Annotations for Grafana Ingress
-    ##
-    annotations: 
-      kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
+    ingressClassName: nginx
 
     ## Hostnames.
     ## Must be provided if Ingress is enable.
     ##
-    # hosts:
-    #   - grafana.domain.com
     hosts: 
     - grafana.example.com
-
     ## Path for grafana ingress
     path: /
 
@@ -96,7 +68,6 @@ grafana:
       enabled: true
       defaultDatasourceEnabled: true
       isDefaultDatasource: true
-
       uid: prometheus
 
       ## Field with internal link pointing to existing data source in Grafana.
@@ -113,7 +84,8 @@ grafana:
   - name: Loki
     type: loki
     uid: loki
-    url: http://loki:3100
+    # url: http://loki:3100
+    url: http://loki-stack:3100
     editable: true
     jsonData:
       maxLines: 1000
@@ -192,16 +164,6 @@ grafana:
 ##
 kube-state-metrics:
   enabled: true
-  # nodeSelector:
-  #   node-role.kubernetes.io/control-plane: ""
-  # tolerations: 
-  # - key: "node-role.kubernetes.io/master"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
-  # - key: "node-role.kubernetes.io/control-plane"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
-
   nodeSelector: 
     dedicated: monitoring
   tolerations:
@@ -216,43 +178,15 @@ prometheusOperator:
   enabled: true
   ## Admission webhook support for PrometheusRules resources added in Prometheus Operator 0.30 can be enabled to prevent incorrectly formatted
   ## rules from making their way into prometheus and potentially preventing the container from starting
-  admissionWebhooks:
-    patch:
-      # nodeSelector:
-      #   node-role.kubernetes.io/control-plane: ""
-      affinity: {}
-      # tolerations: 
-      # - key: "node-role.kubernetes.io/master"
-      #   operator: "Equal"
-      #   effect: "NoSchedule"
-      # - key: "node-role.kubernetes.io/control-plane"
-      #   operator: "Equal"
-      #   effect: "NoSchedule"
-
-      nodeSelector: 
-        dedicated: monitoring
-      tolerations:
-      - key: "dedicated"
-        value: "monitoring"
-        operator: "Equal"
-        effect: "NoSchedule"
-
-  ## Define which Nodes the Pods are scheduled on.
-  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
-  ##
-  # nodeSelector: 
-  #   node-role.kubernetes.io/control-plane: ""
-
-  ## Tolerations for use with node taints
-  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
-  ##
-  # tolerations: 
-  # - key: "node-role.kubernetes.io/master"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
-  # - key: "node-role.kubernetes.io/control-plane"
-  #   operator: "Equal"
-  #   effect: "NoSchedule"
+  # admissionWebhooks:
+  #   patch:
+  #     nodeSelector: 
+  #       dedicated: monitoring
+  #     tolerations:
+  #     - key: "dedicated"
+  #       value: "monitoring"
+  #       operator: "Equal"
+  #       effect: "NoSchedule"
 
   nodeSelector: 
     dedicated: monitoring
@@ -272,20 +206,10 @@ prometheus:
 
     # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
     # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
-    # ingressClassName: nginx
+    ingressClassName: nginx
 
-    annotations: 
-      kubernetes.io/ingress.class: nginx
-      kubernetes.io/tls-acme: "true"
-
-    ## Hostnames.
-    ## Must be provided if Ingress is enabled.
-    ##
-    # hosts:
-    #   - prometheus.domain.com
     hosts: 
     - prometheus.example.com
-
 
   serviceMonitor:
     ## Scrape interval. If not set, the Prometheus default scrape interval is used.
@@ -348,8 +272,6 @@ prometheus:
 
     # EnableFeatures API enables access to Prometheus disabled features.
     # ref: https://prometheus.io/docs/prometheus/latest/disabled_features/
-    # enableFeatures: []
-    # - exemplar-storage
     enableFeatures: 
     - remote-write-receiver
     - exemplar-storage
@@ -357,14 +279,6 @@ prometheus:
     ## Tolerations for use with node taints
     ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
     ##
-    # tolerations: 
-    # - key: "node-role.kubernetes.io/master"
-    #   operator: "Equal"
-    #   effect: "NoSchedule"
-    # - key: "node-role.kubernetes.io/control-plane"
-    #   operator: "Equal"
-    #   effect: "NoSchedule"
-
     tolerations:
     - key: "dedicated"
       value: "monitoring"
@@ -378,9 +292,6 @@ prometheus:
     ## Define which Nodes the Pods are scheduled on.
     ## ref: https://kubernetes.io/docs/user-guide/node-selection/
     ##
-    # nodeSelector: 
-    #   node-role.kubernetes.io/control-plane: ""
-
     nodeSelector: 
       dedicated: monitoring
 
@@ -398,11 +309,6 @@ prometheus:
       #   - felix-metrics
       #   - calico-kube-controllers-metrics
       matchExpressions:
-      # - key: release
-      #   operator: In
-      #   values: 
-      #   - kube-prometheus-stack
-        # - tempo
       - key: app.kubernetes.io/instance
         operator: In
         values:
@@ -417,66 +323,6 @@ prometheus:
     #   matchLabels:
     #     prometheus: somelabel
 
-    ## How long to retain metrics
-    ##
-    retention: 7d
-
-    ## Maximum size of metrics
-    ##
-    retentionSize: ""
-
-    ## Enable compression of the write-ahead log using Snappy.
-    ##
-    walCompression: true
-
-    ## Number of replicas of each shard to deploy for a Prometheus deployment.
-    ## Number of replicas multiplied by shards is the total number of Pods created.
-    ##
-    replicas: 1
-
-    ## EXPERIMENTAL: Number of shards to distribute targets onto.
-    ## Number of replicas multiplied by shards is the total number of Pods created.
-    ## Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved.
-    ## Increasing shards will not reshard data either but it will continue to be available from the same instances.
-    ## To query globally use Thanos sidecar and Thanos querier or remote write data to a central location.
-    ## Sharding is done on the content of the `__address__` target meta-label.
-    ##
-    shards: 1
-
-    ## Log level for Prometheus be configured in
-    ##
-    logLevel: info
-
-    ## Log format for Prometheus be configured in
-    ##
-    logFormat: logfmt
-
-
-    ## Prometheus StorageSpec for persistent data
-    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/storage.md
-    ##
-    storageSpec: {}
-    ## Using PersistentVolumeClaim
-    ##
-    #  volumeClaimTemplate:
-    #    spec:
-    #      storageClassName: gluster
-    #      accessModes: ["ReadWriteOnce"]
-    #      resources:
-    #        requests:
-    #          storage: 50Gi
-    #    selector: {}
-
-    ## Using tmpfs volume
-    ##
-    #  emptyDir:
-    #    medium: Memory
-
-    # Additional volumes on the output StatefulSet definition.
-    volumes: []
-
-    # Additional VolumeMounts on the output StatefulSet definition.
-    volumeMounts: []
 
     ## AdditionalScrapeConfigs allows specifying additional Prometheus scrape configurations. Scrape configurations
     ## are appended to the configurations generated by the Prometheus Operator. Job configurations must have the form

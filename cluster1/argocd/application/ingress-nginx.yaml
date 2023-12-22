@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ingress-nginx
+  namespace: argocd
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - chart: ingress-nginx
+    repoURL: https://kubernetes.github.io/ingress-nginx
+    targetRevision: "4.9.0"
+    helm:
+      version: v3
+      releaseName: ingress-nginx
+      valueFiles:
+      - $values-repo/cluster1/ingress-nginx/values.yaml
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    targetRevision: main
+    ref: values-repo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ingress-nginx
+  syncPolicy:
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: batch/v1
+    kind: Job
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP

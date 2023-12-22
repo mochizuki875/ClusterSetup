@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kube-prometheus-stack
+  namespace: argocd
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - chart: kube-prometheus-stack
+    repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: "52.1.0"
+    helm:
+      version: v3
+      releaseName: kube-prometheus-stack
+      valueFiles:
+      - $values-repo/cluster1/monitoring/kube-prometheus-stack/values.yaml
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    targetRevision: main
+    ref: values-repo
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/kube-prometheus-stack/dashboard
+    targetRevision: main
+    directory:
+      recurse: true
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/kube-prometheus-stack/calico
+    targetRevision: main
+    directory:
+      recurse: true  
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true # https://github.com/argoproj/argo-cd/issues/820#issuecomment-1246960210
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP

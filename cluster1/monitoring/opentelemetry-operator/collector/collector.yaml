@@ -91,7 +91,7 @@ spec:
           processors:
           # - memory_limiter
           # - batch
-          - tail_sampling
+          - tail_sampling # metrics生成前に置きたい
           exporters:
           - otlp
         traces/servicegraph:
