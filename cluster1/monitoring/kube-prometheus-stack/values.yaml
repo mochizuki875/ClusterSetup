@@ -1,0 +1,700 @@
+## Configuration for alertmanager
+## ref: https://prometheus.io/docs/alerting/alertmanager/
+##
+alertmanager:
+  alertmanagerSpec:
+    # nodeSelector: 
+    #   node-role.kubernetes.io/control-plane: ""
+    # tolerations: 
+    # - key: "node-role.kubernetes.io/master"
+    #   operator: "Equal"
+    #   effect: "NoSchedule"
+    # - key: "node-role.kubernetes.io/control-plane"
+    #   operator: "Equal"
+    #   effect: "NoSchedule"
+    nodeSelector: 
+      dedicated: monitoring
+    tolerations:
+    - key: "dedicated"
+      value: "monitoring"
+      operator: "Equal"
+      effect: "NoSchedule"
+
+## Using default values from https://github.com/grafana/helm-charts/blob/main/charts/grafana/values.yaml
+##
+grafana:
+  enabled: true
+  namespaceOverride: ""
+  grafana.ini:
+    feature_toggles:
+      enable: "tempoSearch tempoBackendSearch tempoServiceGraph tempoApmTable traceToMetrics traceqlEditor"
+
+  # Use persistent volume to store data
+  persistence:
+    enabled: true
+    storageClassName: openebs-hostpath
+
+  # nodeSelector:
+  #   node-role.kubernetes.io/control-plane: ""
+  # tolerations: 
+  # - key: "node-role.kubernetes.io/master"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+  # - key: "node-role.kubernetes.io/control-plane"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+
+  nodeSelector: 
+    dedicated: monitoring
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+  ## Timezone for the default dashboards
+  ## Other options are: browser or a specific timezone, i.e. Europe/Luxembourg
+  ##
+  defaultDashboardsTimezone: jst
+
+  adminPassword: admin
+
+  ingress:
+    ## If true, Grafana Ingress will be created
+    ##
+    enabled: true
+
+    ## IngressClassName for Grafana Ingress.
+    ## Should be provided if Ingress is enable.
+    ##
+    # ingressClassName: nginx
+
+    ## Annotations for Grafana Ingress
+    ##
+    annotations: 
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+
+    ## Hostnames.
+    ## Must be provided if Ingress is enable.
+    ##
+    # hosts:
+    #   - grafana.domain.com
+    hosts: 
+    - grafana.example.com
+
+    ## Path for grafana ingress
+    path: /
+
+  sidecar:
+    dashboards:
+      enabled: true
+      label: grafana_dashboard
+      labelValue: "1"
+
+    datasources:
+      enabled: true
+      defaultDatasourceEnabled: true
+      isDefaultDatasource: true
+
+      uid: prometheus
+
+      ## Field with internal link pointing to existing data source in Grafana.
+      ## Can be provisioned via additionalDataSources
+      exemplarTraceIdDestinations: 
+        datasourceUid: tempo
+        traceIdLabelName: trace_id
+
+  ## Configure additional grafana datasources (passed through tpl)
+  ## ref: http://docs.grafana.org/administration/provisioning/#datasources
+  additionalDataSources: 
+  # Loki DataSource
+  # https://grafana.com/docs/grafana/latest/datasources/loki/
+  - name: Loki
+    type: loki
+    uid: loki
+    url: http://loki:3100
+    editable: true
+    jsonData:
+      maxLines: 1000
+      derivedFields:
+        # Field with internal link pointing to data source in Grafana.
+        # Right now, Grafana supports only Jaeger and Zipkin data sources as link targets.
+        # datasourceUid value can be anything, but it should be unique across all defined data source uids.
+        - datasourceUid: tempo
+          matcherRegex: "trace_id: (\\w+)"
+          name: TraceID
+          # url will be interpreted as query for the datasource
+          url: '$${__value.raw}'
+  # Tempo DataSource
+  # https://grafana.com/docs/grafana/latest/datasources/tempo/
+  - name: Tempo
+    type: tempo
+    # url: http://tempo-query-frontend:3100
+    url: http://tempo:3100
+    uid: tempo
+    editable: true
+    jsonData:
+      tracesToLogs:
+        datasourceUid: 'loki'
+        mapTagNamesEnabled: true
+        mappedTags: [{ key: 'k8s.pod.name', value: 'pod' }]
+        filterByTraceID: true
+        filterBySpanID: false
+      tracesToMetrics:
+        datasourceUid: 'prometheus'
+        tags: [{ key: 'service.name', value: 'service_name' }]
+        spanStartTimeShift: -5m
+        spanEndTimeShift: 5m
+        # なぜか{$__tags}が反映されない
+        # https://grafana.com/docs/tempo/latest/getting-started/tempo-in-grafana/#metrics-from-spans
+        # https://grafana.com/blog/2022/08/18/new-in-grafana-9.1-trace-to-metrics-allows-users-to-navigate-from-a-trace-span-to-a-selected-data-source/
+        queries:
+          - name: 'Latency'
+            query: 'histogram_quantile(0.90,sum(rate(latency_bucket{$__tags}[30s])) by (le))'
+      serviceMap:
+        datasourceUid: 'prometheus'
+      search:
+        hide: false
+      nodeGraph:
+        enabled: true
+      lokiSearch:
+        datasourceUid: 'loki'    
+  # Jaeger DataSource
+  # https://grafana.com/docs/grafana/latest/datasources/jaeger/
+  # - name: Jaeger
+  #   type: jaeger
+  #   uid: jaeger
+  #   url: http://jaeger-query:16686
+  #   editable: true
+  #   jsonData:
+  #     tracesToLogs:
+  #       # Field with internal link pointing to a logs data source in Grafana.
+  #       # datasourceUid value must match the datasourceUid value of the logs data source.
+  #       datasourceUid: 'loki'
+  #       mapTagNamesEnabled: true
+  #       mappedTags: [{ key: 'k8s.pod.name', value: 'pod' }]
+  #       filterByTraceID: true
+  #       filterBySpanID: true
+  #     # tracesToMetrics:
+  #     #   datasourceUid: 'prometheus'
+  #     #   tags: [{ key: 'service.name', value: 'service' }, { key: 'job' }]
+  #     #   queries:
+  #     #     - name: 'Sample query'
+  #     #       query: 'sum(rate(traces_spanmetrics_latency_bucket{$__tags}[5m]))'
+  #       nodeGraph:
+  #         enabled: true # なぜか効かない
+  #     # spanBarLabel:
+  #     #   label: "Duration"
+
+
+## Configuration for kube-state-metrics subchart
+##
+kube-state-metrics:
+  enabled: true
+  # nodeSelector:
+  #   node-role.kubernetes.io/control-plane: ""
+  # tolerations: 
+  # - key: "node-role.kubernetes.io/master"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+  # - key: "node-role.kubernetes.io/control-plane"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+
+  nodeSelector: 
+    dedicated: monitoring
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+## Manages Prometheus and Alertmanager components
+##
+prometheusOperator:
+  enabled: true
+  ## Admission webhook support for PrometheusRules resources added in Prometheus Operator 0.30 can be enabled to prevent incorrectly formatted
+  ## rules from making their way into prometheus and potentially preventing the container from starting
+  admissionWebhooks:
+    patch:
+      # nodeSelector:
+      #   node-role.kubernetes.io/control-plane: ""
+      affinity: {}
+      # tolerations: 
+      # - key: "node-role.kubernetes.io/master"
+      #   operator: "Equal"
+      #   effect: "NoSchedule"
+      # - key: "node-role.kubernetes.io/control-plane"
+      #   operator: "Equal"
+      #   effect: "NoSchedule"
+
+      nodeSelector: 
+        dedicated: monitoring
+      tolerations:
+      - key: "dedicated"
+        value: "monitoring"
+        operator: "Equal"
+        effect: "NoSchedule"
+
+  ## Define which Nodes the Pods are scheduled on.
+  ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+  ##
+  # nodeSelector: 
+  #   node-role.kubernetes.io/control-plane: ""
+
+  ## Tolerations for use with node taints
+  ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+  ##
+  # tolerations: 
+  # - key: "node-role.kubernetes.io/master"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+  # - key: "node-role.kubernetes.io/control-plane"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+
+  nodeSelector: 
+    dedicated: monitoring
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+## Deploy a Prometheus instance
+##
+prometheus:
+  enabled: true
+
+  ingress:
+    enabled: true
+
+    # For Kubernetes >= 1.18 you should specify the ingress-controller via the field ingressClassName
+    # See https://kubernetes.io/blog/2020/04/02/improvements-to-the-ingress-api-in-kubernetes-1.18/#specifying-the-class-of-an-ingress
+    # ingressClassName: nginx
+
+    annotations: 
+      kubernetes.io/ingress.class: nginx
+      kubernetes.io/tls-acme: "true"
+
+    ## Hostnames.
+    ## Must be provided if Ingress is enabled.
+    ##
+    # hosts:
+    #   - prometheus.domain.com
+    hosts: 
+    - prometheus.example.com
+
+
+  serviceMonitor:
+    ## Scrape interval. If not set, the Prometheus default scrape interval is used.
+    ##
+    interval: ""
+    selfMonitor: true
+
+    ## scheme: HTTP scheme to use for scraping. Can be used with `tlsConfig` for example if using istio mTLS.
+    scheme: ""
+
+    ## tlsConfig: TLS configuration to use when scraping the endpoint. For example if using istio mTLS.
+    ## Of type: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#tlsconfig
+    tlsConfig: {}
+
+    bearerTokenFile:
+
+    ## Metric relabel configs to apply to samples before ingestion.
+    ##
+    metricRelabelings: []
+    # - action: keep
+    #   regex: 'kube_(daemonset|deployment|pod|namespace|node|statefulset).+'
+    #   sourceLabels: [__name__]
+
+    #   relabel configs to apply to samples before ingestion.
+    ##
+    relabelings: []
+    # - sourceLabels: [__meta_kubernetes_pod_node_name]
+    #   separator: ;
+    #   regex: ^(.*)$
+    #   targetLabel: nodename
+    #   replacement: $1
+    #   action: replace
+
+  ## Settings affecting prometheusSpec
+  ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#prometheusspec
+  ##
+  prometheusSpec:
+
+    ## Interval between consecutive scrapes.
+    ## Defaults to 30s.
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
+    ##
+    scrapeInterval: "5s"
+
+    ## Number of seconds to wait for target to respond before erroring
+    ##
+    scrapeTimeout: ""
+
+    ## Interval between consecutive evaluations.
+    ##
+    evaluationInterval: "30s"
+
+    ## Exemplars related settings that are runtime reloadable.
+    ## It requires to enable the exemplar storage feature to be effective.
+    exemplars: ""
+      ## Maximum number of exemplars stored in memory for all series.
+      ## If not set, Prometheus uses its default value.
+      ## A value of zero or less than zero disables the storage.
+      # maxSize: 100000
+
+    # EnableFeatures API enables access to Prometheus disabled features.
+    # ref: https://prometheus.io/docs/prometheus/latest/disabled_features/
+    # enableFeatures: []
+    # - exemplar-storage
+    enableFeatures: 
+    - remote-write-receiver
+    - exemplar-storage
+
+    ## Tolerations for use with node taints
+    ## ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+    ##
+    # tolerations: 
+    # - key: "node-role.kubernetes.io/master"
+    #   operator: "Equal"
+    #   effect: "NoSchedule"
+    # - key: "node-role.kubernetes.io/control-plane"
+    #   operator: "Equal"
+    #   effect: "NoSchedule"
+
+    tolerations:
+    - key: "dedicated"
+      value: "monitoring"
+      operator: "Equal"
+      effect: "NoSchedule"
+
+    ## enable --web.enable-remote-write-receiver flag on prometheus-server
+    ##
+    enableRemoteWriteReceiver: true
+
+    ## Define which Nodes the Pods are scheduled on.
+    ## ref: https://kubernetes.io/docs/user-guide/node-selection/
+    ##
+    # nodeSelector: 
+    #   node-role.kubernetes.io/control-plane: ""
+
+    nodeSelector: 
+      dedicated: monitoring
+
+    ## ServiceMonitors to be selected for target discovery.
+    ## If {}, select all ServiceMonitors
+    ##
+    serviceMonitorSelector: 
+    ## Example which selects ServiceMonitors with label "prometheus" set to "somelabel"
+      # matchLabels:
+      #   prometheus: somelabel
+      # matchExpressions:
+      # - key: app
+      #   operator: In
+      #   values: 
+      #   - felix-metrics
+      #   - calico-kube-controllers-metrics
+      matchExpressions:
+      # - key: release
+      #   operator: In
+      #   values: 
+      #   - kube-prometheus-stack
+        # - tempo
+      - key: app.kubernetes.io/instance
+        operator: In
+        values:
+        - kube-prometheus-stack
+        - tempo
+
+    ## Namespaces to be selected for ServiceMonitor discovery.
+    ##
+    serviceMonitorNamespaceSelector: {}
+    ## Example which selects ServiceMonitors in namespaces with label "prometheus" set to "somelabel"
+    # serviceMonitorNamespaceSelector:
+    #   matchLabels:
+    #     prometheus: somelabel
+
+    ## How long to retain metrics
+    ##
+    retention: 7d
+
+    ## Maximum size of metrics
+    ##
+    retentionSize: ""
+
+    ## Enable compression of the write-ahead log using Snappy.
+    ##
+    walCompression: true
+
+    ## Number of replicas of each shard to deploy for a Prometheus deployment.
+    ## Number of replicas multiplied by shards is the total number of Pods created.
+    ##
+    replicas: 1
+
+    ## EXPERIMENTAL: Number of shards to distribute targets onto.
+    ## Number of replicas multiplied by shards is the total number of Pods created.
+    ## Note that scaling down shards will not reshard data onto remaining instances, it must be manually moved.
+    ## Increasing shards will not reshard data either but it will continue to be available from the same instances.
+    ## To query globally use Thanos sidecar and Thanos querier or remote write data to a central location.
+    ## Sharding is done on the content of the `__address__` target meta-label.
+    ##
+    shards: 1
+
+    ## Log level for Prometheus be configured in
+    ##
+    logLevel: info
+
+    ## Log format for Prometheus be configured in
+    ##
+    logFormat: logfmt
+
+
+    ## Prometheus StorageSpec for persistent data
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/user-guides/storage.md
+    ##
+    storageSpec: {}
+    ## Using PersistentVolumeClaim
+    ##
+    #  volumeClaimTemplate:
+    #    spec:
+    #      storageClassName: gluster
+    #      accessModes: ["ReadWriteOnce"]
+    #      resources:
+    #        requests:
+    #          storage: 50Gi
+    #    selector: {}
+
+    ## Using tmpfs volume
+    ##
+    #  emptyDir:
+    #    medium: Memory
+
+    # Additional volumes on the output StatefulSet definition.
+    volumes: []
+
+    # Additional VolumeMounts on the output StatefulSet definition.
+    volumeMounts: []
+
+    ## AdditionalScrapeConfigs allows specifying additional Prometheus scrape configurations. Scrape configurations
+    ## are appended to the configurations generated by the Prometheus Operator. Job configurations must have the form
+    ## as specified in the official Prometheus documentation:
+    ## https://prometheus.io/docs/prometheus/latest/configuration/configuration/#scrape_config. As scrape configs are
+    ## appended, the user is responsible to make sure it is valid. Note that using this feature may expose the possibility
+    ## to break upgrades of Prometheus. It is advised to review Prometheus release notes to ensure that no incompatible
+    ## scrape configs are going to break Prometheus after the upgrade.
+    ## AdditionalScrapeConfigs can be defined as a list or as a templated string.
+    ##
+    ## The scrape configuration example below will find master nodes, provided they have the name .*mst.*, relabel the
+    ## port to 2379 and allow etcd scraping provided it is running on all Kubernetes master nodes
+    ##
+    additionalScrapeConfigs: 
+    # OpenTelemetry Collector Prometheus Exporter
+    - job_name: 'open-telemetry-collector'
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: opentelemetry-prometheus-exporter
+        replacement: $1
+        action: keep
+      - source_labels:
+        - __address__
+        regex: .*9090
+        action: keep
+      - source_labels:
+        - __meta_kubernetes_service_name
+        target_label: job
+      - source_labels:
+        - __meta_kubernetes_pod_name
+        target_label: pod
+    # ingress-nginx
+    - job_name: 'ingress-nginx-endpoints'
+      kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+          - ingress-nginx
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: true
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
+        action: replace
+        target_label: __scheme__
+        regex: (https?)
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        target_label: __address__
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: prometheus-server
+        action: drop
+    # Calico
+    - job_name: 'felix_metrics'
+      scrape_interval: 5s
+      scheme: http
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: felix-metrics-svc
+        replacement: $1
+        action: keep
+    - job_name: 'calico-kube_controllers_metrics'
+      scrape_interval: 5s
+      scheme: http
+      kubernetes_sd_configs:
+      - role: endpoints
+      relabel_configs:
+      - source_labels: [__meta_kubernetes_service_name]
+        regex: calico-kube-controllers-metrics-svc
+        replacement: $1
+        action: keep
+    # PGO Metrics
+    # - job_name: 'crunchy-postgres-exporter'
+    #   kubernetes_sd_configs:
+    #   - role: pod
+    #   relabel_configs:
+    #   - source_labels: [__meta_kubernetes_pod_label_postgres_operator_crunchydata_com_crunchy_postgres_exporter,__meta_kubernetes_pod_label_crunchy_postgres_exporter]
+    #     action: keep
+    #     regex: true
+    #     separator: ""
+    #   - source_labels: [__meta_kubernetes_pod_container_port_number]
+    #     action: drop
+    #     regex: 5432
+    #   - source_labels: [__meta_kubernetes_pod_container_port_number]
+    #     action: drop
+    #     regex: 10000
+    #   - source_labels: [__meta_kubernetes_pod_container_port_number]
+    #     action: drop
+    #     regex: 8009
+    #   - source_labels: [__meta_kubernetes_pod_container_port_number]
+    #     action: drop
+    #     regex: 2022
+    #   - source_labels: [__meta_kubernetes_pod_container_port_number]
+    #     action: drop
+    #     regex: ^$
+    #   - source_labels: [__meta_kubernetes_namespace]
+    #     action: replace
+    #     target_label: kubernetes_namespace
+    #   - source_labels: [__meta_kubernetes_pod_name]
+    #     target_label: pod
+    #   - source_labels: [__meta_kubernetes_pod_label_postgres_operator_crunchydata_com_cluster,__meta_kubernetes_pod_label_pg_cluster]
+    #     target_label: cluster
+    #     separator: ""
+    #     replacement: '$1'
+    #   - source_labels: [__meta_kubernetes_namespace,cluster]
+    #     target_label: pg_cluster
+    #     separator: ":"
+    #     replacement: '$1$2'
+    #   - source_labels: [__meta_kubernetes_pod_ip]
+    #     target_label: ip
+    #     replacement: '$1'
+    #   - source_labels: [__meta_kubernetes_pod_label_postgres_operator_crunchydata_com_instance,__meta_kubernetes_pod_label_deployment_name]
+    #     target_label: deployment
+    #     replacement: '$1'
+    #     separator: ""
+    #   - source_labels: [__meta_kubernetes_pod_label_postgres_operator_crunchydata_com_role,__meta_kubernetes_pod_label_role]
+    #     target_label: role
+    #     replacement: '$1'
+    #     separator: ""
+    #   - source_labels: [dbname]
+    #     target_label: dbname
+    #     replacement: '$1'
+    #   - source_labels: [relname]
+    #     target_label: relname
+    #     replacement: '$1'
+    #   - source_labels: [schemaname]
+    #     target_label: schemaname
+    #     replacement: '$1'
+    # ubuntu-server02 node_exporter(192.168.2.117:9100)
+    - job_name: ubuntu-server02
+      scrape_interval: 5s
+      static_configs:
+      - targets: ['192.168.2.117:9100']
+    # ubuntu-server03 node_exporter(192.168.2.118:9100)
+    # - job_name: ubuntu-server03
+    #   scrape_interval: 5s
+    #   static_configs:
+    #   - targets: ['192.168.2.118:9100']
+    # ubuntu-server04 node_exporter(192.168.2.119:9100)
+    - job_name: ubuntu-server04
+      scrape_interval: 5s
+      static_configs:
+      - targets: ['192.168.2.119:9100']
+
+  additionalServiceMonitors: []
+  ## Name of the ServiceMonitor to create
+  ##
+  # - name: ""
+  # - name: "felix-metrics"
+  #   additionalLabels:
+  #     release: monitoring
+  #   endpoints:
+  #   - interval: 10s
+  #     port: http-metrics
+  #     scheme: http
+  #     path: "/metrics"
+  #     jobLabel: calico
+  #     namespaceSelector:
+  #       matchNames:
+  #       - kube-system
+  #     selector:
+  #       matchLabels:
+  #         app: felix-metrics
+
+
+
+## Component scraping the kubelet and kubelet-hosted cAdvisor
+##
+kubelet:
+  enabled: true
+  namespace: kube-system
+
+  serviceMonitor:
+    ## MetricRelabelConfigs to apply to samples after scraping, but before ingestion.
+    ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#relabelconfig
+    ##
+    cAdvisorMetricRelabelings:
+      # Drop less useful container CPU metrics.
+      # - sourceLabels: [__name__]
+      #   action: drop
+      #   regex: 'container_cpu_(cfs_throttled_seconds_total|load_average_10s|system_seconds_total|user_seconds_total)'
+      # Drop less useful container / always zero filesystem metrics.
+      - sourceLabels: [__name__]
+        action: drop
+        regex: 'container_fs_(io_current|io_time_seconds_total|io_time_weighted_seconds_total|reads_merged_total|sector_reads_total|sector_writes_total|writes_merged_total)'
+      # Drop less useful / always zero container memory metrics.
+      - sourceLabels: [__name__]
+        action: drop
+        regex: 'container_memory_(mapped_file|swap)'
+      # Drop less useful container process metrics.
+      - sourceLabels: [__name__]
+        action: drop
+        regex: 'container_(file_descriptors|tasks_state|threads_max)'
+      # Drop container spec metrics that overlap with kube-state-metrics.
+      - sourceLabels: [__name__]
+        action: drop
+        regex: 'container_spec.*'
+      # Drop cgroup metrics with no pod.
+      - sourceLabels: [id, pod]
+        action: drop
+        regex: '.+;'
+    # - sourceLabels: [__name__, image]
+    #   separator: ;
+    #   regex: container_([a-z_]+);
+    #   replacement: $1
+    #   action: drop
+    # - sourceLabels: [__name__]
+    #   separator: ;
+    #   regex: container_(network_tcp_usage_total|network_udp_usage_total|tasks_state|cpu_load_average_10s)
+    #   replacement: $1
+    #   action: drop

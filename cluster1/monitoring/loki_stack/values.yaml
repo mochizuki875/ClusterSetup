@@ -1,0 +1,22 @@
+loki:
+  enabled: true
+  isDefault: false
+  datasource: {}
+    # jsonData: {}
+    # uid: ""
+  nodeSelector: 
+    node-role.kubernetes.io/control-plane: ""
+  tolerations: 
+  - key: "node-role.kubernetes.io/master"
+    operator: "Equal"
+    effect: "NoSchedule"
+  - key: "node-role.kubernetes.io/control-plane"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+grafana:
+  enabled: false
+  sidecar:
+    datasources:
+      enabled: false # GrafanaのDataSource For SideCarで拾うConfigMapを作成しない
+      maxLines: 1000

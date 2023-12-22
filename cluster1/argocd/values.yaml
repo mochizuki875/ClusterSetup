@@ -1,0 +1,27 @@
+## Globally shared configuration
+global:
+  nodeSelector: 
+    node-role.kubernetes.io/control-plane: ""
+  tolerations:
+  - key: "node-role.kubernetes.io/control-plane"
+    effect: "NoSchedule"
+
+## Argo Configs
+# configs:
+#   params:
+#   # -- Run server without TLS
+#     server.insecure: true
+server:
+  extensions:
+    # -- Enable support for Argo UI extensions
+    enabled: true
+  ## Server service configuration
+  service:
+    # -- Server service type
+    type: LoadBalancer
+    # -- LoadBalancer will get created with the IP specified in this field
+    loadBalancerIP: "192.168.2.125"
+    # -- Bcrypt hashed admin password
+    ## Argo expects the password in the secret to be bcrypt hashed. You can create this hash with
+    ## `htpasswd -nbBC 10 "" $ARGO_PWD | tr -d ':\n' | sed 's/$2y/$2a/'`
+    # argocdServerAdminPassword: "$2a$10$ZjJV5/mNzzyA/Kdg9W/N6.6kg7xleaJ7Zir4lEO8vWyEan2bdwKvW"  
