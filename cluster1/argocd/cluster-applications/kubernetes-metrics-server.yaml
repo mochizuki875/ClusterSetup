@@ -7,6 +7,7 @@ metadata:
     argocd.argoproj.io/sync-wave: "40"
 spec:
   project: default
+  sources:
   # Sources field specifies the list of sources for the application
   - repoURL: https://github.com/mochizuki875/ClusterSetup
     path: cluster1/monitoring/kubernetes-metrics-server
@@ -15,7 +16,7 @@ spec:
       recurse: true  
   destination:
     server: https://kubernetes.default.svc
-    namespace: kube-system
+    # namespace: kube-system
   syncPolicy:
     automated:
       prune: true
