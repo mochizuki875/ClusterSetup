@@ -18,6 +18,8 @@ spec:
     server: https://kubernetes.default.svc
     namespace: openebs
   syncPolicy:
+    automated:
+      prune: true
     syncOptions:     # Sync options which modifies sync behavior
     - CreateNamespace=true
     - ServerSideApply=true

@@ -15,6 +15,7 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: argocd
-  # syncPolicy:
-  #   syncOptions:     # Sync options which modifies sync behavior
-  #   - ServerSideApply=true
+  syncPolicy:  
+    syncOptions:     # Sync options which modifies sync behavior
+    - ApplyOutOfSyncOnly=true
+    # - ServerSideApply=true
