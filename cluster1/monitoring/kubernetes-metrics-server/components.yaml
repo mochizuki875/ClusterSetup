@@ -172,8 +172,15 @@ spec:
         volumeMounts:
         - mountPath: /tmp
           name: tmp-dir
-      nodeSelector:
-        kubernetes.io/os: linux
+      # nodeSelector:
+      #   kubernetes.io/os: linux
+      nodeSelector: 
+        dedicated: monitoring
+      tolerations:
+      - key: "dedicated"
+        value: "monitoring"
+        operator: "Equal"
+        effect: "NoSchedule"
       priorityClassName: system-cluster-critical
       serviceAccountName: metrics-server
       volumes:

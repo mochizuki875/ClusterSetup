@@ -5,12 +5,10 @@ loki:
     # jsonData: {}
     # uid: ""
   nodeSelector: 
-    node-role.kubernetes.io/control-plane: ""
-  tolerations: 
-  - key: "node-role.kubernetes.io/master"
-    operator: "Equal"
-    effect: "NoSchedule"
-  - key: "node-role.kubernetes.io/control-plane"
+    dedicated: monitoring
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
     operator: "Equal"
     effect: "NoSchedule"
 
