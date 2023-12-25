@@ -25,11 +25,6 @@ spec:
     targetRevision: main
     directory:
       recurse: true
-  - repoURL: https://github.com/mochizuki875/ClusterSetup
-    path: cluster1/monitoring/opentelemetry-operator/instrumentation
-    targetRevision: main
-    directory:
-      recurse: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring
