@@ -1,0 +1,29 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-metrics-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/kubernetes-metrics-server
+    targetRevision: main
+    directory:
+      recurse: true  
+  destination:
+    server: https://kubernetes.default.svc
+  syncPolicy:
+    automated:
+      prune: true
+  #   syncOptions:     # Sync options which modifies sync behavior
+  #   - CreateNamespace=true
+  #   - ServerSideApply=true # https://github.com/argoproj/argo-cd/issues/820#issuecomment-1246960210
+  #   - RespectIgnoreDifferences=true
+  # ignoreDifferences:
+  # - group: ""
+  #   kind: Service
+  #   jsonPointers:
+  #   - /spec/clusterIP
