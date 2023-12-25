@@ -17,6 +17,9 @@ spec:
       releaseName: kube-prometheus-stack
       valueFiles:
       - $values-repo/cluster1/monitoring/kube-prometheus-stack/values.yaml
+      parameters:
+      - name: prometheusOperator.admissionWebhooks.failurePolicy
+        value: Ignore
   - repoURL: https://github.com/mochizuki875/ClusterSetup
     targetRevision: main
     ref: values-repo
