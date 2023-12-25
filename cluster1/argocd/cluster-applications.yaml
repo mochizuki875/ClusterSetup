@@ -16,6 +16,9 @@ spec:
     server: https://kubernetes.default.svc
     namespace: argocd
   syncPolicy:  
+    automated:
+      prune: true
+      selfHeal: true
     syncOptions:     # Sync options which modifies sync behavior
     - ApplyOutOfSyncOnly=true
     - RespectIgnoreDifferences=true
