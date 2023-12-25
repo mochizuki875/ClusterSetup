@@ -3,6 +3,8 @@ kind: Application
 metadata:
   name: tempo
   namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
 spec:
   project: default
   # Sources field specifies the list of sources for the application
