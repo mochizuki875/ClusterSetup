@@ -18,4 +18,9 @@ spec:
   syncPolicy:  
     syncOptions:     # Sync options which modifies sync behavior
     - ApplyOutOfSyncOnly=true
-    # - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: argoproj.io/v1alpha1
+    kind: Application
+    jsonPointers:
+    - /spec/ignoreDifferences
