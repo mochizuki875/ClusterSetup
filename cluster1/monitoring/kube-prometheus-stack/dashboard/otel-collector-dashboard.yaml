@@ -6,7 +6,7 @@ metadata:
   name: otel-collector-dashboard
   namespace: monitoring
 data:
-  otel-collector.json: |-
+  otel-collector-dashboard.json: |-
     {
       "annotations": {
         "list": [
@@ -29,7 +29,7 @@ data:
       "fiscalYearStartMonth": 0,
       "gnetId": 12553,
       "graphTooltip": 0,
-      "id": 33,
+      "id": 37,
       "links": [],
       "liveNow": false,
       "panels": [
@@ -550,7 +550,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -578,10 +578,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -644,7 +643,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -672,10 +671,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -738,7 +736,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -766,10 +764,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -832,7 +829,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -860,10 +857,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -957,7 +953,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -985,10 +981,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1062,7 +1057,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -1091,10 +1086,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1158,7 +1152,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -1187,10 +1181,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1263,7 +1256,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -1292,10 +1285,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
@@ -1360,7 +1352,7 @@ data:
           },
           "fieldConfig": {
             "defaults": {
-              "links": []
+              "custom": {}
             },
             "overrides": []
           },
@@ -1388,10 +1380,9 @@ data:
           "links": [],
           "nullPointMode": "null",
           "options": {
-            "alertThreshold": true
+            "dataLinks": []
           },
           "percentage": false,
-          "pluginVersion": "10.1.5",
           "pointradius": 5,
           "points": false,
           "renderer": "flot",
