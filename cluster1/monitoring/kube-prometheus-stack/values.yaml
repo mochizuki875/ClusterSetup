@@ -394,7 +394,7 @@ prometheus:
         regex: felix-metrics-svc
         replacement: $1
         action: keep
-    - job_name: 'calico-kube_controllers_metrics'
+    - job_name: 'kube_controllers_metrics'
       scrape_interval: 5s
       scheme: http
       kubernetes_sd_configs:
