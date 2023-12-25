@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: cluster-applications
+  namespace: argocd
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/argocd/cluster-applications
+    targetRevision: main
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  # syncPolicy:
+  #   syncOptions:     # Sync options which modifies sync behavior
+  #   - ServerSideApply=true
