@@ -55,17 +55,17 @@ spec:
         check_interval: 1s
         limit_mib: 4000
         spike_limit_mib: 800
-      tail_sampling:
-        decision_wait: 10s
-        num_traces: 100000
-        policies:
-          [
-            {
-              name: latency_policy,
-              type: latency,
-              latency: {threshold_ms: 20}
-            },
-          ]
+      # tail_sampling:
+      #   decision_wait: 10s
+      #   num_traces: 100000
+      #   policies:
+      #     [
+      #       {
+      #         name: latency_policy,
+      #         type: latency,
+      #         latency: {threshold_ms: 20}
+      #       },
+      #     ]
       spanmetrics:
         metrics_exporter: prometheusremotewrite
         dimensions:
