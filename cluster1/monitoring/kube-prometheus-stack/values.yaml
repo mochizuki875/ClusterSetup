@@ -401,7 +401,7 @@ prometheus:
       - role: endpoints
       relabel_configs:
       - source_labels: [__meta_kubernetes_service_name]
-        regex: calico-kube-controllers-metrics-svc
+        regex: calico-kube-controllers-metrics
         replacement: $1
         action: keep
     # PGO Metrics
