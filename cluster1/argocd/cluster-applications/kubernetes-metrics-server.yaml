@@ -18,14 +18,5 @@ spec:
     server: https://kubernetes.default.svc
     # namespace: kube-system
   syncPolicy:
-    automated:
-      prune: true
-  #   syncOptions:     # Sync options which modifies sync behavior
-  #   - CreateNamespace=true
-  #   - ServerSideApply=true # https://github.com/argoproj/argo-cd/issues/820#issuecomment-1246960210
-  #   - RespectIgnoreDifferences=true
-  # ignoreDifferences:
-  # - group: ""
-  #   kind: Service
-  #   jsonPointers:
-  #   - /spec/clusterIP
+    # automated:
+    #   prune: true
