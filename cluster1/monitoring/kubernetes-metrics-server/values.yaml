@@ -1,0 +1,10 @@
+nodeSelector: 
+  dedicated: monitoring
+tolerations:
+- key: "dedicated"
+  value: "monitoring"
+  operator: "Equal"
+  effect: "NoSchedule"
+
+args:
+- --kubelet-insecure-tls

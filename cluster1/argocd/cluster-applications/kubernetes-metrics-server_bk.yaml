@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: kubernetes-metrics-server
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  project: default
+  sources:
+  # Sources field specifies the list of sources for the application
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    path: cluster1/monitoring/kubernetes-metrics-server
+    targetRevision: main
+    directory:
+      recurse: true  
+  destination:
+    server: https://kubernetes.default.svc
+    # namespace: kube-system
+  syncPolicy:
+    # automated:
+    #   prune: true
