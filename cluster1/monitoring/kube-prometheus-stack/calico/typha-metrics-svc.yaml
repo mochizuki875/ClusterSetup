@@ -3,10 +3,13 @@ kind: Service
 metadata:
   name: typha-metrics-svc
   namespace: calico-system
+  labels:
+    app: typha-metrics
 spec:
   clusterIP: None
   selector:
     k8s-app: calico-typha
   ports:
-  - port: 9093
+  - name: http-metrics
+    port: 9093
     targetPort: 9093

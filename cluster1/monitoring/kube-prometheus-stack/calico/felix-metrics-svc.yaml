@@ -3,10 +3,13 @@ kind: Service
 metadata:
   name: felix-metrics-svc
   namespace: calico-system
+  labels:
+    app: felix-metrics
 spec:
   clusterIP: None
   selector:
     k8s-app: calico-node
   ports:
-  - port: 9091
+  - name: http-metrics
+    port: 9091
     targetPort: 9091

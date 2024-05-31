@@ -252,7 +252,7 @@ prometheus:
     ## Defaults to 30s.
     ## ref: https://github.com/prometheus-operator/prometheus-operator/blob/release-0.44/pkg/prometheus/promcfg.go#L180-L183
     ##
-    scrapeInterval: "5s"
+    scrapeInterval: "10s"
 
     ## Number of seconds to wait for target to respond before erroring
     ##
@@ -299,15 +299,6 @@ prometheus:
     ## If {}, select all ServiceMonitors
     ##
     serviceMonitorSelector: 
-    ## Example which selects ServiceMonitors with label "prometheus" set to "somelabel"
-      # matchLabels:
-      #   prometheus: somelabel
-      # matchExpressions:
-      # - key: app
-      #   operator: In
-      #   values: 
-      #   - felix-metrics
-      #   - calico-kube-controllers-metrics
       matchExpressions:
       - key: app.kubernetes.io/instance
         operator: In
@@ -356,67 +347,6 @@ prometheus:
       - source_labels:
         - __meta_kubernetes_pod_name
         target_label: pod
-    # ingress-nginx
-    - job_name: 'ingress-nginx-endpoints'
-      kubernetes_sd_configs:
-      - role: pod
-        namespaces:
-          names:
-          - ingress-nginx
-      relabel_configs:
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
-        action: keep
-        regex: true
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scheme]
-        action: replace
-        target_label: __scheme__
-        regex: (https?)
-      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
-        action: replace
-        target_label: __metrics_path__
-        regex: (.+)
-      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
-        action: replace
-        target_label: __address__
-        regex: ([^:]+)(?::\d+)?;(\d+)
-        replacement: $1:$2
-      - source_labels: [__meta_kubernetes_service_name]
-        regex: prometheus-server
-        action: drop
-    # Calico
-    - job_name: 'felix_metrics'
-      scrape_interval: 5s
-      scheme: http
-      kubernetes_sd_configs:
-      - role: endpoints
-      relabel_configs:
-      - source_labels: [__meta_kubernetes_service_name]
-        regex: felix-metrics-svc
-        replacement: $1
-        action: keep
-    - job_name: 'typha_metrics'
-      scrape_interval: 5s
-      scheme: http
-      kubernetes_sd_configs:
-      - role: endpoints
-      relabel_configs:
-      - source_labels: [__meta_kubernetes_service_name]
-        regex: typha-metrics-svc
-        replacement: $1
-        action: keep
-      - source_labels: [__meta_kubernetes_pod_container_port_name]
-        regex: calico-typha
-        action: drop
-    - job_name: 'kube_controllers_metrics'
-      scrape_interval: 5s
-      scheme: http
-      kubernetes_sd_configs:
-      - role: endpoints
-      relabel_configs:
-      - source_labels: [__meta_kubernetes_service_name]
-        regex: calico-kube-controllers-metrics
-        replacement: $1
-        action: keep
     # PGO Metrics
     # - job_name: 'crunchy-postgres-exporter'
     #   kubernetes_sd_configs:
@@ -490,27 +420,57 @@ prometheus:
       static_configs:
       - targets: ['192.168.2.119:9100']
 
-  additionalServiceMonitors: []
+  additionalServiceMonitors: 
   ## Name of the ServiceMonitor to create
   ##
   # - name: ""
-  # - name: "felix-metrics"
-  #   additionalLabels:
-  #     release: monitoring
-  #   endpoints:
-  #   - interval: 10s
-  #     port: http-metrics
-  #     scheme: http
-  #     path: "/metrics"
-  #     jobLabel: calico
-  #     namespaceSelector:
-  #       matchNames:
-  #       - kube-system
-  #     selector:
-  #       matchLabels:
-  #         app: felix-metrics
+  - name: "calico-felix"
+    additionalLabels:
+      release: monitoring
+    endpoints:
+    - interval: 10s
+      port: http-metrics
+      scheme: http
+      path: "/metrics"
+    jobLabel: calico
+    namespaceSelector:
+      matchNames:
+      - calico-system
+    selector:
+      matchLabels:
+        app: felix-metrics
 
+  - name: "calico-kube-controllers"
+    additionalLabels:
+      release: monitoring
+    endpoints:
+    - interval: 10s
+      port: http-metrics
+      scheme: http
+      path: "/metrics"
+    jobLabel: calico
+    namespaceSelector:
+      matchNames:
+      - calico-system
+    selector:
+      matchLabels:
+        app: calico-kube-controllers-metrics
 
+  - name: "ingress-nginx"
+    additionalLabels:
+      release: monitoring
+    endpoints:
+    - interval: 10s
+      port: metrics
+      scheme: http
+      path: "/metrics"
+    jobLabel: ingress-nginx
+    namespaceSelector:
+      matchNames:
+      - ingress-nginx
+    selector:
+      matchLabels:
+        app.kubernetes.io/name: ingress-nginx
 
 ## Component scraping the kubelet and kubelet-hosted cAdvisor
 ##
