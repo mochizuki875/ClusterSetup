@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: log-test-pod
+spec:
+  containers:
+    - name: log-test-pod
+      image: busybox
+      command:
+          - /bin/sh
+          - -c
+          - while true; do date; sleep 5; done

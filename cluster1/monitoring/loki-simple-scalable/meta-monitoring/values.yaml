@@ -1,0 +1,33 @@
+namespacesToMonitor:
+- monitoring
+
+cloud:
+  logs:
+    enabled: false
+  metrics:
+    enabled: false
+  traces:
+    enabled: false
+
+local:
+  grafana:
+    enabled: false
+  logs:
+    enabled: false
+  metrics:
+    enabled: true
+  traces:
+    enabled: false
+  minio:
+    enabled: true
+
+# Prometheus Storage
+# https://github.com/grafana/mimir/blob/main/operations/helm/charts/mimir-distributed/values.yaml
+mimir-distributed:
+  alertmanager:  
+    persistentVolume:
+      enabled: false
+
+
+# Object Storage
+mimir-distributed:

@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: openebs
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "10"
+spec:
+  project: default
+  source:
+    chart: openebs
+    repoURL: https://openebs.github.io/charts
+    targetRevision: "3.10.0"
+    helm:
+      version: v3
+      releaseName: openebs
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: openebs
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true

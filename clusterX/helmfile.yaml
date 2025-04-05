@@ -1,0 +1,9 @@
+helmfiles:
+  - ./openebs/helmfile.yaml
+  - ./ingress-nginx/helmfile.yaml
+  - ./cert-manager/helmfile.yaml
+  - ./monitoring/kubernetes-metrics-server/helmfile.yaml
+  - ./monitoring/kube-prometheus-stack/helmfile.yaml
+  - ./monitoring/loki-stack/helmfile.yaml
+  - ./monitoring/tempo/helmfile.yaml
+  - ./monitoring/opentelemetry-operator/helmfile.yaml

@@ -1,0 +1,41 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: tempo
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "40"
+spec:
+  project: default
+  # Sources field specifies the list of sources for the application
+  sources:
+  - chart: tempo
+    repoURL: https://grafana.github.io/helm-charts
+    targetRevision: "1.7.1"
+    helm:
+      version: v3
+      releaseName: tempo
+      valueFiles:
+      - $values-repo/cluster1/monitoring/tempo/values-single.yaml
+  - repoURL: https://github.com/mochizuki875/ClusterSetup
+    targetRevision: main
+    ref: values-repo
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: monitoring
+  syncPolicy:
+    automated:
+      prune: true
+    syncOptions:     # Sync options which modifies sync behavior
+    - CreateNamespace=true
+    - ServerSideApply=true
+    - RespectIgnoreDifferences=true
+  ignoreDifferences:
+  - group: ""
+    kind: Service
+    jsonPointers:
+    - /spec/clusterIP
+  - group: apps
+    kind: StatefulSet
+    jsonPointers:
+    - /spec/volumeClaimTemplates

@@ -1,0 +1,14 @@
+# installCRDs: true
+nodeSelector: 
+  dedicated: monitoring
+tolerations:
+- key: "dedicated"
+  value: "monitoring"
+  operator: "Equal"
+  effect: "NoSchedule"
+## Provide OpenTelemetry Operator manager container image and resources.
+##
+manager:
+  collectorImage:
+    repository: "otel/opentelemetry-collector-k8s"
+    tag: 0.117.0

@@ -1,0 +1,64 @@
+loki:
+  auth_enabled: false
+  schemaConfig:
+    configs:
+      - from: 2024-04-01
+        store: tsdb
+        object_store: s3
+        schema: v13
+        index:
+          prefix: loki_index_
+          period: 24h
+  ingester:
+    chunk_encoding: snappy
+  tracing:
+    enabled: true
+  querier:
+    # Default is 4, if you have enough memory and CPU you can increase, reduce if OOMing
+    max_concurrent: 4
+  # Grafanaの統計情報送信を無効にする
+  analytics: 
+    reporting_enabled: false
+    usage_stats_url: ""
+
+  storage:
+    type: s3
+    bucketNames:
+      chunks: "loki-bucket"
+      ruler: "loki-bucket"
+      admin: "loki-bucket"
+    s3:
+      # AWS endpoint URL
+      endpoint: rook-ceph-rgw-monitoring-cos.rook-ceph.svc
+      # AWS secret access key
+      secretAccessKey: tZSl07uCE3Gnuh1mGtOOpvrI9pQegdJJVkKOXakc
+      # AWS access key ID
+      accessKeyId: EQJQDM5L525RC19OLHZ9
+      # Forces the path style for S3 (true/false)
+      s3ForcePathStyle: true
+      # Allows insecure (HTTP) connections (true/false)
+      insecure: true
+
+#gateway:
+#  ingress:
+#    enabled: true
+#    hosts:
+#      - host: FIXME
+#        paths:
+#          - path: /
+#            pathType: Prefix
+
+deploymentMode: SimpleScalable
+
+backend:
+  persistence:
+    size: 5Gi
+    storageClass: rook-ceph-block
+write:
+  persistence:
+    size: 5Gi
+    storageClass: rook-ceph-block
+
+# Enable minio for storage
+minio:
+  enabled: false

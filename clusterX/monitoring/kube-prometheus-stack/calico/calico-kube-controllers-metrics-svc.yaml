@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: calico-kube-controllers-metrics-svc
+  namespace: calico-system
+  labels:
+    app: calico-kube-controllers-metrics
+spec:
+  clusterIP: None
+  selector:
+    k8s-app: calico-kube-controllers
+  ports:
+  - name: http-metrics
+    port: 9094
+    targetPort: 9094

@@ -1,0 +1,248 @@
+# Configuration for the ingester
+ingester:
+  # -- Number of replicas for the ingester
+  replicas: 3
+  # -- topologySpread for ingester pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: {}
+  # -- Affinity for ingester pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Soft node and soft zone anti-affinity
+  affinity: {}
+  # -- Node selector for ingester pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+  persistence:
+    # -- Enable creating PVCs which is required when using boltdb-shipper
+    enabled: true
+    # -- Size of persistent or memory disk
+    size: 10Gi
+    # -- Storage class to be used.
+    # If defined, storageClassName: <storageClass>.
+    # If set to "-", storageClassName: "", which disables dynamic provisioning.
+    # If empty or set to null, no storageClassName spec is
+    # set, choosing the default provisioner (gp2 on AWS, standard on GKE, AWS, and OpenStack).
+    storageClass: openebs-hostpath
+
+# Configuration for the distributor
+distributor:
+  # -- Number of replicas for the distributor
+  replicas: 3
+  # -- topologySpread for distributor pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: {}
+  # -- Affinity for distributor pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: {}
+  # -- Node selector for compactor pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+compactor:
+  # -- Number of replicas for the compactor
+  replicas: 1
+  # -- Node selector for compactor pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+# Configuration for the querier
+querier:
+  # -- Number of replicas for the querier
+  replicas: 1
+  topologySpreadConstraints: {}
+  # -- Affinity for querier pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: {}
+  # -- Node selector for querier pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+# Configuration for the query-frontend
+queryFrontend:
+  replicas: 1
+  # -- topologySpread for query-frontend pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: {}
+  # -- Affinity for query-frontend pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: {}
+  # -- Node selector for querier pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+traces:
+  otlp:
+    http:
+      # -- Enable Tempo to ingest Open Telemetry HTTP traces
+      enabled: true
+      # -- HTTP receiver advanced config
+      receiverConfig: {}
+    grpc:
+      # -- Enable Tempo to ingest Open Telemetry GRPC traces
+      enabled: true
+      # -- GRPC receiver advanced config
+      receiverConfig: {}
+
+
+# To configure a different storage backend instead of local storage:
+# storage:
+#   trace:
+#     backend: azure
+#     azure:
+#       container_name:
+#       storage_account_name:
+#       storage_account_key:
+# storage:
+#   trace:
+#     # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/tempo/latest/configuration/#storage
+#     backend: local
+#   # Settings for the Admin client storage backend and buckets. Only valid is enterprise.enabled is true.
+#   admin:
+#     # -- The supported storage backends are gcs, s3 and azure, as specified in https://grafana.com/docs/enterprise-traces/latest/config/reference/#admin_client_config
+#     backend: filesystem
+storage:
+  trace:
+    backend: s3
+    s3:
+      access_key: tempo-trace
+      secret_key: tempo-trace
+      bucket: tempo-traces
+      endpoint: tempo-minio:9000
+      insecure: true 
+    pool:
+      queue_depth: 2000
+    wal:
+      path: /var/tempo/wal
+    memcached:
+      consistent_hash: true
+      host: a-tempo-distributed-memcached
+      service: memcached-client
+      timeout: 500ms    
+
+# Global overrides
+global_overrides:
+  per_tenant_override_config: /conf/overrides.yaml
+  ingestion_rate_strategy: global
+  max_bytes_per_trace: 0
+  max_traces_per_user: 0
+  max_search_bytes_per_trace: 0
+
+# Per tenants overrides
+overrides: |
+  overrides: {}
+
+# memcached is for all of the Tempo pieces to coordinate with each other.
+# you can use your self memcacherd by set enable: false and host + service
+memcached:
+  enabled: true
+  # -- topologySpread for query-frontend pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Defaults to allow skew no more then 1 node per AZ
+  topologySpreadConstraints: {}
+  # -- Affinity for query-frontend pods. Passed through `tpl` and, thus, to be configured as string
+  # @default -- Hard node and soft zone anti-affinity
+  affinity: {}
+  # -- Node selector for querier pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+
+metaMonitoring:
+  # ServiceMonitor configuration
+  serviceMonitor:
+    # -- If enabled, ServiceMonitor resources for Prometheus Operator are created
+    enabled: true
+    # -- Alternative namespace for ServiceMonitor resources
+    namespace: null
+    # -- Namespace selector for ServiceMonitor resources
+    namespaceSelector: {}
+    # -- ServiceMonitor annotations
+    annotations: {}
+    # -- Additional ServiceMonitor labels
+    labels: {}
+    # -- ServiceMonitor scrape interval
+    interval: "5s"
+    # -- ServiceMonitor scrape timeout in Go duration format (e.g. 15s)
+    scrapeTimeout: null
+    # -- ServiceMonitor relabel configs to apply to samples before scraping
+    # https://github.com/prometheus-operator/prometheus-operator/blob/master/Documentation/api.md#relabelconfig
+    relabelings: []
+    # -- ServiceMonitor metric relabel configs to apply to samples before ingestion
+    # https://github.com/prometheus-operator/prometheus-operator/blob/main/Documentation/api.md#endpoint
+    metricRelabelings: []
+    # -- ServiceMonitor will use http by default, but you can pick https as well
+    scheme: http
+    # -- ServiceMonitor will use these tlsConfig settings to make the health check requests
+    tlsConfig: null
+
+minio:
+  enabled: true
+  mode: standalone
+  rootUser: grafana-tempo
+  rootPassword: supersecret
+  accessKey: tempo-trace
+  secretKey: tempo-trace
+  buckets:
+    # Default Tempo storage bucket.
+    - name: tempo-traces
+      policy: none
+      purge: true
+    # Bucket for traces storage if enterprise.enabled is true - requires license.
+    - name: enterprise-traces
+      policy: none
+      purge: false
+    # Admin client bucket if enterprise.enabled is true - requires license.
+    - name: enterprise-traces-admin
+      policy: none
+      purge: false
+  persistence:
+    size: 5Gi
+    storageClass: openebs-hostpath
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+  # -- Node selector for querier pods
+  nodeSelector: 
+    dedicated: monitoring
+  # -- Tolerations for ingester pods
+  tolerations:
+  - key: "dedicated"
+    value: "monitoring"
+    operator: "Equal"
+    effect: "NoSchedule"
+  # Changed the mc config path to '/tmp' from '/etc' as '/etc' is only writable by root and OpenShift will not permit this.
+  configPathmc: '/tmp/minio/mc/'

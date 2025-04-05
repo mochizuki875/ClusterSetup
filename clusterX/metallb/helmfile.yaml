@@ -1,0 +1,11 @@
+repositories:
+- name: metallb
+  url: https://metallb.github.io/metallb
+
+releases:
+  - name: metallb
+    namespace: metallb-system
+    createNamespace: true 
+    chart: metallb/metallb
+    # values:
+    # - values.yaml

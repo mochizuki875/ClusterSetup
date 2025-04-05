@@ -1,0 +1,10 @@
+repositories:
+- name: openebs
+  url: https://openebs.github.io/charts
+
+releases:
+  - name: openebs
+    namespace: openebs
+    createNamespace: true 
+    chart: openebs/openebs
+    version: 3.10.0

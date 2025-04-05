@@ -21,9 +21,9 @@ grafana:
       enable: "tempoSearch tempoBackendSearch tempoServiceGraph tempoApmTable traceToMetrics traceqlEditor"
 
   # Use persistent volume to store data
-  persistence:
-    enabled: true
-    storageClassName: openebs-hostpath
+  # persistence:
+  #   enabled: true
+  #   storageClassName: openebs-hostpath
 
   nodeSelector: 
     dedicated: monitoring
@@ -372,16 +372,16 @@ prometheus:
       release: monitoring
     endpoints:
     - interval: 10s
-      port: http-metrics
+      port: http-metrics # Serviceでメトリクスを公開しているポート名
       scheme: http
       path: "/metrics"
-    jobLabel: calico
+    jobLabel: calico # メトリクスに付与する"job"ラベルの値(任意) (Serviceのlabel keyを指定するとそのvalueが使われる)
     namespaceSelector:
       matchNames:
-      - calico-system
+      - calico-system # Serviceが存在するNamespace
     selector:
       matchLabels:
-        app: felix-metrics
+        app: felix-metrics # Serviceを特定するためのセレクター
 
   - name: "calico-kube-controllers"
     additionalLabels:
@@ -414,6 +414,22 @@ prometheus:
     selector:
       matchLabels:
         app.kubernetes.io/name: ingress-nginx
+
+  - name: "jmx-exporter"
+    additionalLabels:
+      release: monitoring
+    endpoints:
+    - interval: 10s
+      port: metrics
+      scheme: http
+      path: "/metrics"
+    jobLabel: job
+    namespaceSelector:
+      matchNames:
+      - default
+    selector:
+      matchLabels:
+        job: jmx-metrics
 
   # https://rook.io/docs/rook/latest-release/Storage-Configuration/Monitoring/ceph-monitoring/
   # https://github.com/rook/rook/blob/master/deploy/examples/monitoring/exporter-service-monitor.yaml
